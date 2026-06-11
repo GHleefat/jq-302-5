@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Header } from "@/components/Header";
 import { ItemList } from "@/components/ItemList";
 import { CustomerDialog } from "@/components/CustomerDialog";
@@ -17,6 +17,8 @@ export default function Home() {
   const availableItems = items.filter(
     (item) => !item.isSold && item.unlockLevel <= vendorLevel,
   );
+
+  const customerDialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isNegotiating || availableItems.length === 0) return;
@@ -37,6 +39,15 @@ export default function Home() {
     availableItems.length,
   ]);
 
+  useEffect(() => {
+    if (isNegotiating && customerDialogRef.current) {
+      customerDialogRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [isNegotiating]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-100 via-orange-50 to-yellow-100">
       <NotificationToast />
@@ -45,13 +56,15 @@ export default function Home() {
       <main className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
+            <div ref={customerDialogRef}>
+              <CustomerDialog />
+            </div>
             <ItemList />
             <FinancialAnalysis />
           </div>
 
           <div className="space-y-6">
             <VendorLevel />
-            <CustomerDialog />
             <TradeHistory />
             <StallUpgrade />
           </div>

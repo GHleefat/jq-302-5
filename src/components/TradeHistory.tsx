@@ -1,6 +1,7 @@
-import { History, TrendingUp, TrendingDown } from "lucide-react";
+import { History, TrendingUp, TrendingDown, Sparkles } from "lucide-react";
 import { useGameStore } from "../store/gameStore";
 import { formatMoney, formatTime } from "../utils/format";
+import { cn } from "../lib/utils";
 
 export const TradeHistory = () => {
   const { tradeHistory } = useGameStore();
@@ -20,8 +21,7 @@ export const TradeHistory = () => {
     );
   }
 
-  const totalRevenue = tradeHistory.reduce((sum, r) => sum + r.salePrice, 0);
-  const totalProfit = tradeHistory.reduce((sum, r) => sum + r.profit, 0);
+  const recentTrades = tradeHistory.slice(0, 5);
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -35,65 +35,65 @@ export const TradeHistory = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="bg-blue-50 rounded-xl p-3">
-          <p className="text-sm text-blue-600 mb-1">总销售额</p>
-          <p className="text-xl font-bold text-blue-700">
-            {formatMoney(totalRevenue)}
-          </p>
-        </div>
-        <div className="bg-green-50 rounded-xl p-3">
-          <p className="text-sm text-green-600 mb-1">总利润</p>
-          <p
-            className={`text-xl font-bold ${totalProfit >= 0 ? "text-green-700" : "text-red-700"}`}
-          >
-            {totalProfit >= 0 ? "+" : ""}
-            {formatMoney(totalProfit)}
-          </p>
-        </div>
+      <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
+        {recentTrades.map((record, index) => {
+          const isLatest = index === 0;
+          return (
+            <div
+              key={record.id}
+              className={cn(
+                "relative flex items-center gap-3 p-3 rounded-xl transition-colors",
+                isLatest
+                  ? "bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-300 shadow-md"
+                  : "bg-gray-50 hover:bg-gray-100",
+              )}
+            >
+              {isLatest && (
+                <div className="absolute -top-2 -right-2">
+                  <span className="bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full font-bold shadow">
+                    ✨ 最新
+                  </span>
+                </div>
+              )}
+              <div className="text-3xl">{record.customerEmoji}</div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-gray-800 truncate">
+                    {record.itemName}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500">
+                  {record.customerName} · {formatTime(record.timestamp)}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="font-bold text-gray-800">
+                  {formatMoney(record.salePrice)}
+                </p>
+                <p
+                  className={`text-sm flex items-center justify-end gap-0.5 ${
+                    record.profit >= 0 ? "text-green-600" : "text-red-500"
+                  }`}
+                >
+                  {record.profit >= 0 ? (
+                    <TrendingUp className="w-3 h-3" />
+                  ) : (
+                    <TrendingDown className="w-3 h-3" />
+                  )}
+                  {record.profit >= 0 ? "+" : ""}
+                  {formatMoney(record.profit)}
+                </p>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
-        {tradeHistory.map((record) => (
-          <div
-            key={record.id}
-            className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
-          >
-            <div className="text-3xl">{record.customerEmoji}</div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-gray-800 truncate">
-                  {record.itemName}
-                </span>
-                <span className="text-xs text-gray-400">
-                  {record.customerName}
-                </span>
-              </div>
-              <p className="text-sm text-gray-500">
-                {formatTime(record.timestamp)}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="font-bold text-gray-800">
-                {formatMoney(record.salePrice)}
-              </p>
-              <p
-                className={`text-sm flex items-center justify-end gap-0.5 ${
-                  record.profit >= 0 ? "text-green-600" : "text-red-500"
-                }`}
-              >
-                {record.profit >= 0 ? (
-                  <TrendingUp className="w-3 h-3" />
-                ) : (
-                  <TrendingDown className="w-3 h-3" />
-                )}
-                {record.profit >= 0 ? "+" : ""}
-                {formatMoney(record.profit)}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
+      {tradeHistory.length > 5 && (
+        <p className="text-center text-xs text-gray-400 mt-3">
+          还有 {tradeHistory.length - 5} 条历史记录
+        </p>
+      )}
     </div>
   );
 };
