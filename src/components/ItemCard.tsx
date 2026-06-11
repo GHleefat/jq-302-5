@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Tag, Pencil, Check, X, Minus, Plus, Lock } from "lucide-react";
+import { Tag, Pencil, Check, X, Minus, Plus, Lock, RefreshCw } from "lucide-react";
 import type { Item } from "../types";
 import { formatMoney } from "../utils/format";
 import { useGameStore } from "../store/gameStore";
@@ -11,9 +11,10 @@ interface ItemCardProps {
 }
 
 export const ItemCard = ({ item }: ItemCardProps) => {
-  const { currentItem, isNegotiating, updateItemPrice, vendorLevel } = useGameStore();
+  const { currentItem, isNegotiating, updateItemPrice, vendorLevel, restockItem, money } = useGameStore();
   const isSelected = currentItem?.id === item.id && isNegotiating;
   const isLocked = item.unlockLevel > vendorLevel;
+  const canRestock = item.isSold && !isLocked && money >= item.costPrice;
   const [isEditing, setIsEditing] = useState(false);
   const [tempPrice, setTempPrice] = useState(item.listPrice);
 
@@ -41,6 +42,10 @@ export const ItemCard = ({ item }: ItemCardProps) => {
     setTempPrice(Math.max(1, tempPrice + delta));
   };
 
+  const handleRestock = () => {
+    restockItem(item.id);
+  };
+
   return (
     <div
       className={cn(
@@ -53,11 +58,26 @@ export const ItemCard = ({ item }: ItemCardProps) => {
           : "border-transparent",
       )}
     >
-      {item.isSold && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20 z-10">
-          <span className="bg-red-500 text-white px-4 py-1 rounded-full text-sm font-bold rotate-12">
-            已售出
-          </span>
+      {item.isSold && !isLocked && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
+          <div className="text-center">
+            <span className="bg-red-500 text-white px-4 py-1 rounded-full text-sm font-bold rotate-12 block mb-3">
+              已售出
+            </span>
+            <button
+              onClick={handleRestock}
+              disabled={!canRestock}
+              className={cn(
+                "px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-1 mx-auto transition-all",
+                canRestock
+                  ? "bg-green-500 text-white hover:bg-green-600 active:scale-95 shadow-lg"
+                  : "bg-gray-400 text-gray-200 cursor-not-allowed",
+              )}
+            >
+              <RefreshCw className="w-4 h-4" />
+              补货 {formatMoney(item.costPrice)}
+            </button>
+          </div>
         </div>
       )}
 

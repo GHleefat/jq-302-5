@@ -12,7 +12,7 @@ export const vendorLevels: VendorLevel[] = [
   {
     level: 2,
     name: "熟练摊主",
-    expRequired: 500,
+    expRequired: 200,
     description: "有一定经验的摊主",
     emoji: "🧑‍💼",
     perks: ["解锁3种进阶商品", "可升级到市场入口摊位", "顾客出价+5%"],
@@ -20,7 +20,7 @@ export const vendorLevels: VendorLevel[] = [
   {
     level: 3,
     name: "资深摊主",
-    expRequired: 1500,
+    expRequired: 600,
     description: "市场中的老手",
     emoji: "👨‍💼",
     perks: ["解锁3种稀有商品", "可升级到中心摊位", "顾客出价+10%"],
@@ -28,7 +28,7 @@ export const vendorLevels: VendorLevel[] = [
   {
     level: 4,
     name: "金牌摊主",
-    expRequired: 4000,
+    expRequired: 1500,
     description: "市场中的佼佼者",
     emoji: "🏆",
     perks: ["解锁3种珍品商品", "可升级到黄金地段摊位", "顾客出价+15%"],
@@ -36,10 +36,15 @@ export const vendorLevels: VendorLevel[] = [
   {
     level: 5,
     name: "传奇摊主",
-    expRequired: 10000,
+    expRequired: 3500,
     description: "跳蚤市场的传奇人物",
     emoji: "👑",
-    perks: ["全部商品解锁", "可升级到VIP专属区摊位", "顾客出价+25%", "客流量+20%"],
+    perks: [
+      "全部商品解锁",
+      "可升级到VIP专属区摊位",
+      "顾客出价+25%",
+      "客流量+20%",
+    ],
   },
 ];
 
@@ -47,7 +52,9 @@ export const getVendorLevel = (level: number): VendorLevel => {
   return vendorLevels.find((v) => v.level === level) || vendorLevels[0];
 };
 
-export const getNextVendorLevel = (currentLevel: number): VendorLevel | null => {
+export const getNextVendorLevel = (
+  currentLevel: number,
+): VendorLevel | null => {
   return vendorLevels.find((v) => v.level === currentLevel + 1) || null;
 };
 

@@ -6,6 +6,7 @@ import {
   Reply,
   Minus,
   Plus,
+  RefreshCw,
 } from "lucide-react";
 import { useGameStore } from "../store/gameStore";
 import { formatMoney } from "../utils/format";
@@ -27,6 +28,10 @@ export const CustomerDialog = () => {
     makeCounterOffer,
     toggleCounterOffer,
     setCounterOfferPrice,
+    items,
+    vendorLevel,
+    restockAll,
+    money,
   } = useGameStore();
 
   const [isAnimating, setIsAnimating] = useState(false);
@@ -49,6 +54,51 @@ export const CustomerDialog = () => {
     const newPrice = Math.max(1, counterOfferPrice + delta);
     setCounterOfferPrice(newPrice);
   };
+
+  const unlockedItems = items.filter((i) => i.unlockLevel <= vendorLevel);
+  const availableItems = unlockedItems.filter((i) => !i.isSold);
+  const soldItems = unlockedItems.filter((i) => i.isSold);
+  const isSoldOut = availableItems.length === 0 && unlockedItems.length > 0;
+  const restockCost = soldItems.reduce((sum, i) => sum + i.costPrice, 0);
+  const canRestockAll = isSoldOut && money >= restockCost;
+
+  if (isSoldOut) {
+    return (
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-red-200">
+        <div className="bg-gradient-to-r from-red-500 to-orange-500 p-6 text-center">
+          <div className="text-6xl mb-3">🛒</div>
+          <h3 className="text-xl font-bold text-white mb-1">商品已售罄！</h3>
+          <p className="text-red-100 text-sm">
+            补货后才能继续开张做生意哦~
+          </p>
+        </div>
+        <div className="p-6 text-center">
+          <p className="text-gray-600 mb-4">
+            你已卖出 <strong>{soldItems.length}</strong> 件商品，
+            赚了不少嘛！快补货继续吧~
+          </p>
+          <button
+            onClick={restockAll}
+            disabled={!canRestockAll}
+            className={cn(
+              "px-6 py-3 rounded-xl font-bold text-lg flex items-center gap-2 mx-auto transition-all",
+              canRestockAll
+                ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600 active:scale-95 shadow-lg shadow-green-200"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed",
+            )}
+          >
+            <RefreshCw className="w-5 h-5" />
+            全部补货 {formatMoney(restockCost)}
+          </button>
+          {!canRestockAll && money < restockCost && (
+            <p className="text-red-500 text-sm mt-3">
+              还差 {formatMoney(restockCost - money)} 才能补货
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (!isNegotiating || !currentCustomer || !currentItem) {
     return (

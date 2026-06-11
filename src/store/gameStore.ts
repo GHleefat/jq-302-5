@@ -39,6 +39,8 @@ interface GameActions {
   ) => void;
   removeNotification: (id: string) => void;
   addExperience: (exp: number) => void;
+  restockItem: (itemId: string) => void;
+  restockAll: () => void;
 }
 
 type GameStore = GameState & GameActions;
@@ -366,6 +368,76 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   resetGame: () => {
     set({ ...initialState, items: [...initialItems] });
+  },
+
+  restockItem: (itemId: string) => {
+    const state = get();
+    const item = state.items.find((i) => i.id === itemId);
+
+    if (!item || !item.isSold) return;
+
+    if (state.money < item.costPrice) {
+      get().addNotification(
+        "error",
+        "资金不足",
+        `补货 ${item.name} 需要 ¥${item.costPrice}，还差 ¥${item.costPrice - state.money}`,
+      );
+      return;
+    }
+
+    set((state) => ({
+      money: state.money - item.costPrice,
+      items: state.items.map((i) =>
+        i.id === itemId ? { ...i, isSold: false } : i,
+      ),
+    }));
+
+    get().addNotification(
+      "success",
+      "📦 补货成功",
+      `${item.name} 已补货完成，花费 ¥${item.costPrice}`,
+    );
+  },
+
+  restockAll: () => {
+    const state = get();
+    const soldUnlockedItems = state.items.filter(
+      (i) => i.isSold && i.unlockLevel <= state.vendorLevel,
+    );
+
+    if (soldUnlockedItems.length === 0) {
+      get().addNotification("info", "无需补货", "所有商品都有货呢~");
+      return;
+    }
+
+    const totalCost = soldUnlockedItems.reduce(
+      (sum, i) => sum + i.costPrice,
+      0,
+    );
+
+    if (state.money < totalCost) {
+      get().addNotification(
+        "error",
+        "资金不足",
+        `全部补货需要 ¥${totalCost}，还差 ¥${totalCost - state.money}`,
+      );
+      return;
+    }
+
+    set((state) => ({
+      money: state.money - totalCost,
+      items: state.items.map((item) =>
+        item.isSold && item.unlockLevel <= state.vendorLevel
+          ? { ...item, isSold: false }
+          : item,
+      ),
+    }));
+
+    get().addNotification(
+      "success",
+      "📦 全部补货成功",
+      `补了 ${soldUnlockedItems.length} 件商品，共花费 ¥${totalCost}`,
+    );
   },
 
   setCounterOfferPrice: (price: number) => {
